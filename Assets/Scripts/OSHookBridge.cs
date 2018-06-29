@@ -31,6 +31,9 @@ public class OSHookBridge
     [DllImport("__Internal")]
 	public static extern void ShowMapView(); //显示地图 UIView->GL
 
+    [DllImport("__Internal")]
+    public static extern void HideMapView(); //关闭地图
+
     #endregion
 
 #elif UNITY_ANDROID

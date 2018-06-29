@@ -161,7 +161,7 @@ PlayerSettings:
     Android: com.seol.OSHook
     Standalone: unity.seol.OSHook
     Tizen: com.seol.OSHook
-    iOS: com.setsuodu.amap
+    iOS: com.setsuodu.aimap
     tvOS: com.seol.OSHook
   buildNumber:
     iOS: 0

@@ -5,18 +5,18 @@ public class PluginController : MonoBehaviour
 	#region CoreLocation集成
 
 	public void StartGPSUpdate()
-    {
+	{
 		//Debug.Log("CoreLocation 开始定位");
 		OSHookBridge.StartGPSUpdate();
-    }
+	}
 
 	public void StopGPSUpdate()
-    {
-        //Debug.Log("CoreLocation 结束定位");
+	{
+		//Debug.Log("CoreLocation 结束定位");
 		OSHookBridge.StopGPSUpdate();
-    }
+	}
 
-    #endregion
+	#endregion
 
 	#region 高德SDK集成
 
@@ -44,16 +44,22 @@ public class PluginController : MonoBehaviour
 		OSHookBridge.LocateStop();
 	}
 
-    public void ShowMapView()
-    {
+	public void ShowMapView()
+	{
 		//Debug.Log("AMap 显示地图");
 		OSHookBridge.ShowMapView();
-    }
+	}
 
-    // UnitySendMessage回调
+    public void HideMapView()
+    {
+        //Debug.Log("AMap 关闭地图");
+		OSHookBridge.HideMapView();
+    }
+   
+	// UnitySendMessage回调
 	public void IOSGPSUpdate(string log)
 	{
-		Debug.Log (log);
+		Debug.Log(log);
 	}
 
 	#endregion
