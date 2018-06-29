@@ -4,9 +4,19 @@ public class OSHookBridge
 {
 #if UNITY_IOS
 
-    #region 高德SDK
+	#region CoreLocation
 
     [DllImport("__Internal")]
+	public static extern void StartGPSUpdate();
+
+    [DllImport("__Internal")]
+    public static extern void StopGPSUpdate();
+
+    #endregion
+
+	#region 高德SDK
+
+	[DllImport("__Internal")]
 	public static extern void LocateInit(); //初始化定位
 
 	[DllImport("__Internal")]
