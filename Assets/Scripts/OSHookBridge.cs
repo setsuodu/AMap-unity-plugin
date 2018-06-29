@@ -28,8 +28,8 @@ public class OSHookBridge
     [DllImport("__Internal")]
     public static extern void LocateStop(); //结束定位
 
-    //[DllImport("__Internal")]
-	//public static extern void ShowMapView(); //显示地图
+    [DllImport("__Internal")]
+	public static extern void ShowMapView(); //显示地图 UIView->GL
 
     #endregion
 

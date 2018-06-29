@@ -27,9 +27,8 @@ public class XCodePostProcess
 		string targetGuid = pbxProj.TargetGuidByName ("Unity-iPhone");
 
 		// 添加内置框架
-		//pbxProj.AddFrameworkToProject (targetGuid, "Security.framework", false); //weak: true:optional, false:required
+        pbxProj.AddFrameworkToProject(targetGuid, "Security.framework", false); //weak: true:optional, false:required
 		pbxProj.AddFrameworkToProject (targetGuid, "CoreLocation.framework", false);
-		pbxProj.AddFrameworkToProject (targetGuid, "Security.framework", false);
 		pbxProj.AddFrameworkToProject (targetGuid, "CoreTelephony.framework", false);
 		pbxProj.AddFrameworksBuildPhase (targetGuid);
 
@@ -38,7 +37,7 @@ public class XCodePostProcess
 		pbxProj.AddFileToBuild(targetGuid, pbxProj.AddFile("usr/lib/libc++.tbd", "Frameworks/libc++.tbd", PBXSourceTree.Sdk));
 
 		// 设置teamID
-		pbxProj.SetBuildProperty (targetGuid, "DEVELOPMENT_TEAM", "AUF3355GWB"); //填的是组织单位，而不是用户ID
+        //...
 
 		File.WriteAllText(projPath, pbxProj.WriteToString());
 	}
@@ -55,7 +54,7 @@ public class XCodePostProcess
 		// CoreLocation
 		plistDict.SetString ("NSLocationAlwaysUsageDescription", "I need Location");
 		plistDict.SetString ("NSLocationWhenInUseUsageDescription", "");
-		//设置Array类型
+		// 设置Array类型
 		var array = plistDict.CreateArray ("UIBackgroundModes");
 		array.AddString ("fetch");
 		array.AddString ("location");

@@ -47,7 +47,7 @@ public class PluginController : MonoBehaviour
     public void ShowMapView()
     {
 		//Debug.Log("AMap 显示地图");
-		//OSHookBridge.ShowMapView();
+		OSHookBridge.ShowMapView();
     }
 
     // UnitySendMessage回调
