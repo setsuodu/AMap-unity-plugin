@@ -7,13 +7,13 @@ public class PluginController : MonoBehaviour
 	public void StartGPSUpdate()
 	{
 		//Debug.Log("CoreLocation 开始定位");
-		OSHookBridge.StartGPSUpdate();
+		//OSHookBridge.StartGPSUpdate();
 	}
 
 	public void StopGPSUpdate()
 	{
 		//Debug.Log("CoreLocation 结束定位");
-		OSHookBridge.StopGPSUpdate();
+		//OSHookBridge.StopGPSUpdate();
 	}
 
 	#endregion

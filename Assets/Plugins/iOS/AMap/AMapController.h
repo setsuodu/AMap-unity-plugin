@@ -2,6 +2,7 @@
 #import <Foundation/Foundation.h>
 #import <MAMapKit/MAMapKit.h>
 #import <AMapLocationKit/AMapLocationKit.h>
+#import <AMapFoundationKit/AMapFoundationKit.h>
 
 @interface AMapController : UIViewController
 

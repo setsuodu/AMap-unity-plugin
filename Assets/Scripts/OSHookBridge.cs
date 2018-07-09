@@ -6,11 +6,11 @@ public class OSHookBridge
 
 	#region CoreLocation
 
-    [DllImport("__Internal")]
-	public static extern void StartGPSUpdate();
+    //[DllImport("__Internal")]
+	//public static extern void StartGPSUpdate();
 
-    [DllImport("__Internal")]
-    public static extern void StopGPSUpdate();
+    //[DllImport("__Internal")]
+    //public static extern void StopGPSUpdate();
 
     #endregion
 
