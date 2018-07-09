@@ -8,3 +8,9 @@
 - AMapFoundationKit.framework
 - AMapLocationKit.framework
 - MAMapKit.framework
+
+### Features
+- [x] 实时定位；
+- [x] 显示地图；
+- [ ] 路径规划；
+- [ ] 实时导航；
