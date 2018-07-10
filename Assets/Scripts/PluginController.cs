@@ -55,12 +55,24 @@ public class PluginController : MonoBehaviour
         //Debug.Log("AMap 关闭地图");
 		OSHookBridge.HideMapView();
     }
-   
+
+	public void SearchKeyword()
+    {
+        //Debug.Log("AMap 搜索关键词");
+		OSHookBridge.SearchKeyword();
+    }
+
+	public void SearchAround(string str)
+    {
+        //Debug.Log("AMap 搜索周围");
+		OSHookBridge.SearchAround(str);
+    }
+
 	// UnitySendMessage回调
 	public void IOSGPSUpdate(string log)
 	{
 		Debug.Log(log);
 	}
-
+   
 	#endregion
 }

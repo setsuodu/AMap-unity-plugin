@@ -34,6 +34,12 @@ public class OSHookBridge
     [DllImport("__Internal")]
     public static extern void HideMapView(); //关闭地图
 
+    [DllImport("__Internal")]
+	public static extern void SearchKeyword(); //搜索关键词
+
+    [DllImport("__Internal")]
+	public static extern void SearchAround(string str); //搜索周围
+
     #endregion
 
 #elif UNITY_ANDROID
