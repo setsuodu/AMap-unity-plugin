@@ -8,7 +8,7 @@
 
 @property (nonatomic, strong) AMapSearchAPI *search;
 
-//- (void)searchPoiByKeyword;
-//- (void)searchPoiByAround;
+- (void)searchPoiByKeyword;
+- (void)searchPoiByAround:(NSString *)keyword;
 
 @end

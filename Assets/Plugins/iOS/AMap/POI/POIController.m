@@ -1,5 +1,6 @@
 #import "POIController.h"
 #import "POIAnnotation.h"
+#import "AMapController.h"
 
 @interface POIController ()<AMapSearchDelegate>
 

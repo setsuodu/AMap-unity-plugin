@@ -16,6 +16,9 @@ public class OSHookBridge
 
 	#region 高德SDK
 
+    [DllImport("__Internal")]
+	public static extern void ConfigureAPIKey(); //初始化定位
+
 	[DllImport("__Internal")]
 	public static extern void LocateInit(); //初始化定位
 

@@ -10,6 +10,7 @@
 
 @property (nonatomic, strong) AMapLocationManager *locationManager;
 
+- (void)configureAPIKey;
 - (void)locateInit;
 - (void)locateOnce;
 - (void)locateUpdate;

@@ -1,4 +1,5 @@
 #import "AMapController.h"
+#import "APIKey.h"
 
 @interface AMapController ()<MAMapViewDelegate, AMapLocationManagerDelegate>
 
@@ -8,10 +9,24 @@
 
 @implementation AMapController
 
+- (void)configureAPIKey
+{
+    if ([APIKey length] == 0)
+    {
+        NSString *reason = [NSString stringWithFormat:@"apiKey为空，请检查key是否正确设置。"];
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:reason delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+        
+        [alert show];
+    }
+    
+    [AMapServices sharedServices].apiKey = (NSString *)APIKey;
+}
+
 //初始化AMapLocationManager对象，设置代理
 - (void)locateInit
 {
-    [AMapServices sharedServices].apiKey = @"5731c751865c618db2afb227d4e2eec5";
+    //[AMapServices sharedServices].apiKey = @"5731c751865c618db2afb227d4e2eec5";
     
     self.locationManager = [[AMapLocationManager alloc] init];
     
@@ -158,6 +173,11 @@ extern "C" {
     
     AMapController * controller = nil;
     
+    void ConfigureAPIKey()
+    {
+        [controller configureAPIKey];
+    }
+    
     void LocateInit()
     {
         NSLog(@"==>> 初始化定位");
@@ -197,7 +217,6 @@ extern "C" {
         [controller hideMapView];
     }
 
-    
 #ifdef __cplusplus
 }
 #endif

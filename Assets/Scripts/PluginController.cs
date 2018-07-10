@@ -2,6 +2,11 @@
 
 public class PluginController : MonoBehaviour
 {
+	void Start()
+	{
+		ConfigureAPIKey();
+	}
+
 	#region CoreLocation集成
 
 	public void StartGPSUpdate()
@@ -19,6 +24,11 @@ public class PluginController : MonoBehaviour
 	#endregion
 
 	#region 高德SDK集成
+
+	public void ConfigureAPIKey()
+    {
+		OSHookBridge.ConfigureAPIKey();
+    }
 
 	public void LocateInit()
 	{
