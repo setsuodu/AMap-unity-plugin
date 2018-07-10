@@ -31,6 +31,8 @@
 /* 检索周边POI. */
 - (void)searchPoiByAround:(NSString *)keyword
 {
+    NSLog(@"当前位置 ==>> (%f,%f)", AMapController.sharedInstance.location.coordinate.longitude, AMapController.sharedInstance.location.coordinate.latitude);
+    
     self.search = [[AMapSearchAPI alloc] init];
     self.search.delegate = self;
     

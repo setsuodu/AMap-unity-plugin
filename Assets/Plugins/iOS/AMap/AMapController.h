@@ -10,6 +10,10 @@
 
 @property (nonatomic, strong) AMapLocationManager *locationManager;
 
+@property (nonatomic, strong) CLLocation *location;
+
++ (AMapController *) sharedInstance;
+
 - (void)configureAPIKey;
 - (void)locateInit;
 - (void)locateOnce;

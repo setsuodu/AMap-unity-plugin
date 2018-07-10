@@ -7,7 +7,15 @@
 
 @end
 
+static AMapController * SharedInstance;
+
 @implementation AMapController
+
++ (AMapController *)sharedInstance {
+    if (SharedInstance == nil)
+        SharedInstance = [[AMapController alloc] init];
+    return SharedInstance;
+}
 
 - (void)configureAPIKey
 {
@@ -26,9 +34,11 @@
 //初始化AMapLocationManager对象，设置代理
 - (void)locateInit
 {
-    //[AMapServices sharedServices].apiKey = @"5731c751865c618db2afb227d4e2eec5";
+    [AMapController.sharedInstance configureAPIKey];
     
-    self.locationManager = [[AMapLocationManager alloc] init];
+    //self.locationManager = [[AMapLocationManager alloc] init];
+    SharedInstance.locationManager = [[AMapLocationManager alloc] init];
+    self.locationManager = SharedInstance.locationManager;
     
     [self.locationManager setDelegate:self];
     
@@ -64,6 +74,8 @@
                 return;
             }
         }
+        
+        self.location = location;
         
         //经纬度信息
         NSString *lat;
@@ -110,8 +122,9 @@
 {
     //NSLog(@"location:{lat:%f; lon:%f; accuracy:%f}", location.coordinate.latitude, location.coordinate.longitude, location.horizontalAccuracy);
     
-    NSString *json = [NSString stringWithFormat:@"{\"lat\":\"%f\",\"lon\":\"%f\",\"alt\":\"%f\",\"accuracy\":\"%f\",\"speed\":\"%f\"}",location.coordinate.latitude,location.coordinate.longitude,location.altitude,location.horizontalAccuracy,location.speed];
+    self.location = location;
     
+    NSString *json = [NSString stringWithFormat:@"{\"lat\":\"%f\",\"lon\":\"%f\",\"alt\":\"%f\",\"accuracy\":\"%f\",\"speed\":\"%f\"}",location.coordinate.latitude,location.coordinate.longitude,location.altitude,location.horizontalAccuracy,location.speed];
     
     NSLog(@"%@", json);
     
@@ -171,50 +184,45 @@ UIView * unityView = nil; //内存指针
 extern "C" {
 #endif
     
-    AMapController * controller = nil;
-    
     void ConfigureAPIKey()
     {
-        [controller configureAPIKey];
+        [AMapController.sharedInstance configureAPIKey];
     }
     
     void LocateInit()
     {
         NSLog(@"==>> 初始化定位");
-        if(controller == nil) {
-            controller = [[AMapController alloc] init];
-        }
-        [controller locateInit];
+        [AMapController.sharedInstance locateInit];
     }
     
     void LocateOnce()
     {
         NSLog(@"==>> 单次定位");
-        [controller locateOnce];
+        [AMapController.sharedInstance locateOnce];
     }
     
     void LocateUpdate()
     {
         NSLog(@"==>> 持续定位");
-        [controller locateUpdate];
+        [AMapController.sharedInstance locateUpdate];
     }
     
     void LocateStop()
     {
         NSLog(@"==>> 结束定位");
-        [controller locateStop];
+        [AMapController.sharedInstance locateStop];
     }
     
     void ShowMapView()
     {
         NSLog(@"==>> 显示地图");
-        [controller showMapView];
+        [AMapController.sharedInstance showMapView];
     }
 
     void HideMapView()
     {
         NSLog(@"==>> 关闭地图");
-        [controller hideMapView];
+        [AMapController.sharedInstance hideMapView];
     }
 
 #ifdef __cplusplus
