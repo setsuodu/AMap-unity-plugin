@@ -43,6 +43,9 @@ public class OSHookBridge
     [DllImport("__Internal")]
 	public static extern void SearchAround(string str); //搜索周围
 
+    [DllImport("__Internal")]
+	public static extern void WalkRoute(double lon0, double lat0, double lon1, double lat1); //步行路径规划 lon,lat
+
     #endregion
 
 #elif UNITY_ANDROID

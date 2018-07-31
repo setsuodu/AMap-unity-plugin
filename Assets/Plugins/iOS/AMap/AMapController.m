@@ -1,9 +1,39 @@
 #import "AMapController.h"
 #import "APIKey.h"
 
+static const NSString *RoutePlanningViewControllerStartTitle       = @"起点";
+static const NSString *RoutePlanningViewControllerDestinationTitle = @"终点";
+static const NSInteger RoutePlanningPaddingEdge                    = 20;
+
 @interface AMapController ()<MAMapViewDelegate, AMapLocationManagerDelegate>
 
 @property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
+
+
+/* 路径规划类型 */
+//@property (nonatomic, strong) MAMapView *mapView;
+@property (nonatomic, strong) AMapSearchAPI *search;
+
+@property (nonatomic, strong) AMapRoute *route;
+
+/* 当前路线方案索引值. */
+@property (nonatomic) NSInteger currentCourse;
+/* 路线方案个数. */
+@property (nonatomic) NSInteger totalCourse;
+
+@property (nonatomic, strong) UIBarButtonItem *previousItem;
+@property (nonatomic, strong) UIBarButtonItem *nextItem;
+
+/* 起始点经纬度. */
+@property (nonatomic) CLLocationCoordinate2D startCoordinate;
+/* 终点经纬度. */
+@property (nonatomic) CLLocationCoordinate2D destinationCoordinate;
+
+/* 用于显示当前路线方案. */
+@property (nonatomic) MANaviRoute * naviRoute;
+
+@property (nonatomic, strong) MAPointAnnotation *startAnnotation;
+@property (nonatomic, strong) MAPointAnnotation *destinationAnnotation;
 
 @end
 
@@ -113,8 +143,6 @@ static AMapController * SharedInstance;
     //NSString *json = [NSString stringWithFormat:@"{\"lat\":\"%f\",\"lon\":\"%f\",\"alt\":\"%f\",\"accuracy\":\"%f\",\"speed\":\"%f\"}",location.coordinate.latitude,location.coordinate.longitude,location.altitude,location.horizontalAccuracy,location.speed];
     
     //NSLog(@"%@", json);
-    
-    //UnitySendMessage("LocationManager", "IOSGPSUpdate", [json UTF8String]);
 }
 
 //自 V2.2.0 版本起amapLocationManager:didUpdateLocation:reGeocode:方法可以在回调位置的同时回调逆地理编码信息。请注意，如果实现了amapLocationManager:didUpdateLocation:reGeocode: 回调，将不会再回调amapLocationManager:didUpdateLocation: 方法。
@@ -133,19 +161,6 @@ static AMapController * SharedInstance;
     if (reGeocode)
     {
         //NSLog(@"reGeocode:%@", reGeocode);
-        
-        //reGeocode.formattedAddress;
-        //reGeocode.country;
-        //reGeocode.province;
-        //reGeocode.city;
-        //reGeocode.district;
-        //reGeocode.street;
-        //reGeocode.number;
-        //reGeocode.citycode;
-        //reGeocode.adcode;
-        //reGeocode.description;
-        //reGeocode.POIName;
-        //reGeocode.AOIName;
     }
 }
 
@@ -153,6 +168,148 @@ static AMapController * SharedInstance;
 - (void)locateStop
 {
     [self.locationManager stopUpdatingLocation];
+}
+
+#pragma mark - do search
+- (void)searchRoutePlanningWalk:(double)lon0 from:(double)lat0 toLon:(double)lon1 toLat:(double)lat1
+{
+    //self.startCoordinate        = CLLocationCoordinate2DMake(30.910267, 120.370888);
+    //self.destinationCoordinate  = CLLocationCoordinate2DMake(30.989872, 120.481956);
+    self.startCoordinate        = CLLocationCoordinate2DMake(lat0, lon0);
+    self.destinationCoordinate  = CLLocationCoordinate2DMake(lat1, lon1);
+    
+    self.search = [[AMapSearchAPI alloc] init];
+    self.search.delegate = self;
+    
+    NSLog(@"步行路径规划");
+    
+    [self addDefaultAnnotations];
+    
+    self.startAnnotation.coordinate = self.startCoordinate;
+    self.destinationAnnotation.coordinate = self.destinationCoordinate;
+    
+    AMapWalkingRouteSearchRequest *navi = [[AMapWalkingRouteSearchRequest alloc] init];
+    
+    // 出发点.
+    navi.origin = [AMapGeoPoint locationWithLatitude:self.startCoordinate.latitude
+                                           longitude:self.startCoordinate.longitude];
+    // 目的地.
+    navi.destination = [AMapGeoPoint locationWithLatitude:self.destinationCoordinate.latitude
+                                                longitude:self.destinationCoordinate.longitude];
+    
+    [self.search AMapWalkingRouteSearch:navi];
+}
+
+- (void)addDefaultAnnotations
+{
+    MAPointAnnotation *startAnnotation = [[MAPointAnnotation alloc] init];
+    startAnnotation.coordinate = self.startCoordinate;
+    startAnnotation.title      = (NSString*)RoutePlanningViewControllerStartTitle;
+    startAnnotation.subtitle   = [NSString stringWithFormat:@"{%f, %f}", self.startCoordinate.latitude, self.startCoordinate.longitude];
+    self.startAnnotation = startAnnotation;
+    
+    MAPointAnnotation *destinationAnnotation = [[MAPointAnnotation alloc] init];
+    destinationAnnotation.coordinate = self.destinationCoordinate;
+    destinationAnnotation.title      = (NSString*)RoutePlanningViewControllerDestinationTitle;
+    destinationAnnotation.subtitle   = [NSString stringWithFormat:@"{%f, %f}", self.destinationCoordinate.latitude, self.destinationCoordinate.longitude];
+    self.destinationAnnotation = destinationAnnotation;
+    
+    [self.mapView addAnnotation:startAnnotation];
+    [self.mapView addAnnotation:destinationAnnotation];
+}
+
+- (void)updateTotal
+{
+    self.totalCourse = self.route.paths.count;
+}
+
+/* 路径规划搜索回调. */
+- (void)onRouteSearchDone:(AMapRouteSearchBaseRequest *)request response:(AMapRouteSearchResponse *)response
+{
+    if (response.route == nil)
+    {
+        return;
+    }
+    
+    self.route = response.route;
+    [self updateTotal];
+    self.currentCourse = 0;
+    
+    if (response.count > 0)
+    {
+        AMapPath * path = response.route.paths[0];
+        MAPolyline * _polyline = [self polylinesForPath:path];
+    }
+}
+
+// 路线解析
+- (MAPolyline *)polylinesForPath:(AMapPath *)path{
+    if (path == nil || path.steps.count == 0){
+        return nil;
+    }
+    NSMutableString *polylineMutableString = [@"" mutableCopy];
+    for (AMapStep *step in path.steps) {
+        [polylineMutableString appendFormat:@"%@;",step.polyline];
+    }
+    
+    NSUInteger count = 0;
+    CLLocationCoordinate2D *coordinates = [self coordinatesForString:polylineMutableString
+                                                     coordinateCount:&count
+                                                          parseToken:@";"];
+    
+    MAPolyline *polyline = [MAPolyline polylineWithCoordinates:coordinates count:count];
+    
+    free(coordinates), coordinates = NULL;
+    return polyline;
+}
+
+// 解析经纬度
+- (CLLocationCoordinate2D *)coordinatesForString:(NSString *)string
+                                 coordinateCount:(NSUInteger *)coordinateCount
+                                      parseToken:(NSString *)token{
+    if (string == nil){
+        return NULL;
+    }
+    
+    if (token == nil){
+        token = @",";
+    }
+    
+    NSString *str = @"";
+    if (![token isEqualToString:@","]){
+        str = [string stringByReplacingOccurrencesOfString:token withString:@","];
+    }else{
+        str = [NSString stringWithString:string];
+    }
+    //NSLog(@"json >>> %@",str);
+    
+    NSArray *components = [str componentsSeparatedByString:@","];
+    NSUInteger count = [components count] / 2;
+    if (coordinateCount != NULL){
+        *coordinateCount = count;
+    }
+    CLLocationCoordinate2D *coordinates = (CLLocationCoordinate2D*)malloc(count * sizeof(CLLocationCoordinate2D));
+    
+    NSMutableArray * array = [[NSMutableArray alloc]initWithArray:@[]];
+    for (int i = 0; i < count; i++) {
+        coordinates[i].longitude = [[components objectAtIndex:2 * i]     doubleValue];
+        coordinates[i].latitude  = [[components objectAtIndex:2 * i + 1] doubleValue];
+        
+        NSString *lat = [NSString stringWithFormat:@"%f", coordinates[i].latitude];
+        NSString *lon = [NSString stringWithFormat:@"%f", coordinates[i].longitude];
+        NSDictionary * dic = @{@"lat":lat, @"lon":lon};
+        [array addObject:dic];
+    }
+    
+    NSError *error = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:array options:NSJSONWritingPrettyPrinted error:nil];
+    if ([jsonData length] && error== nil) {
+        NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        //NSLog(@"jsonString = %@", jsonString);
+        UnitySendMessage("LocationManager", "IOSRoute", [jsonString UTF8String]);
+    }
+    
+    return coordinates;
 }
 
 UIView * unityView = nil; //内存指针
@@ -211,6 +368,12 @@ extern "C" {
     {
         NSLog(@"==>> 结束定位");
         [AMapController.sharedInstance locateStop];
+    }
+    
+    void WalkRoute(double lon0, double lat0, double lon1, double lat1)
+    {
+        NSLog(@"==>> 路径规划:(%f,%f)->(%f,%f)", lon0, lat0, lon1, lat1);
+        [AMapController.sharedInstance searchRoutePlanningWalk:lon0 from:lat0 toLon:lon1 toLat:lat1];
     }
     
     void ShowMapView()
