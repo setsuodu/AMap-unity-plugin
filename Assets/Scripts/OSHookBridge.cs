@@ -44,7 +44,10 @@ public class OSHookBridge
 	public static extern void SearchAround(string str); //搜索周围
 
     [DllImport("__Internal")]
-	public static extern void WalkRoute(double lon0, double lat0, double lon1, double lat1); //步行路径规划 lon,lat
+	public static extern void WalkRoute(double mlat, double mlon, double tlat, double tlon); //步行路径规划 lat,lon
+
+    [DllImport("__Internal")]
+    public static extern void QueryWeather(); //查询天气
 
     #endregion
 

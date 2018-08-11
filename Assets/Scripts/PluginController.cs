@@ -81,17 +81,26 @@ public class PluginController : MonoBehaviour
 	public void WalkRoute()
     {
 		//Debug.Log("AMap 步行路径规划");
-		double lon0 = 120.267500;
-		double lat0 = 30.217220;
-		double lon1 = 120.271915;
-		double lat1 = 30.215010;
-		OSHookBridge.WalkRoute(lon0, lat0, lon1, lat1);
+        double mlat = 30.217220;
+		double mlon = 120.267500;
+        double tlat = 30.215010;
+		double tlon = 120.271915;
+		OSHookBridge.WalkRoute(mlat, mlon, tlat, tlon);
     }
+
+    public void QueryWeather()
+    {
+		OSHookBridge.QueryWeather();
+	}
+
+    #endregion
+
+    #region 回调
 
 	// UnitySendMessage回调
 	public void IOSGPSUpdate(string log)
 	{
-		//Debug.Log(log);
+		Debug.Log(log);
 	}
 
     // 路径规划成功，json回调

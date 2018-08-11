@@ -4,6 +4,8 @@
 
 @interface POIController ()<AMapSearchDelegate>
 
+@property (nonatomic, strong) NSArray *forecastArray;
+
 @end
 
 @implementation POIController
@@ -82,6 +84,39 @@
     //[self.mapView addAnnotations:poiAnnotations];
 }
 
+- (void)onQueryWeather
+{
+    if(self.search == nil){
+        self.search = [[AMapSearchAPI alloc] init];
+        self.search.delegate = self;
+    }
+
+    AMapWeatherSearchRequest *request = [[AMapWeatherSearchRequest alloc] init];
+    request.city = @"110000"; //城市代码
+    request.type = AMapWeatherTypeLive; //AMapWeatherTypeLive为实时天气；AMapWeatherTypeForecase为预报天气
+
+    [self.search AMapWeatherSearch:request];
+}
+
+// 天气查询回调
+- (void)onWeatherSearchDone:(AMapWeatherSearchRequest *)request response:(AMapWeatherSearchResponse *)response
+{
+    //解析response获取天气信息，具体解析见 Demo
+    
+    //NSLog(@"天气查询回调");
+    
+    if (response.lives.count == 0)
+    {
+        return;
+    }
+    
+    AMapLocalWeatherLive *liveWeather = [response.lives firstObject];
+    if (liveWeather != nil)
+    {
+        NSLog(@"city:%@,weather:%@",liveWeather.city,liveWeather.weather);
+    }
+}
+
 @end
 
 #ifdef __cplusplus
@@ -92,7 +127,7 @@ extern "C" {
     
     void SearchKeyword()
     {
-        //NSLog(@"==>> 搜索关键词");
+        //NSLog(@"搜索关键词");
         if(poictr == nil) {
             poictr = [[POIController alloc] init];
         }
@@ -101,13 +136,22 @@ extern "C" {
     
     void SearchAround(const char * keyword)
     {
-        //NSLog(@"==>> 搜索周围");
+        //NSLog(@"搜索周围");
         if(poictr == nil) {
             poictr = [[POIController alloc] init];
         }
         
         NSString * str = [NSString stringWithUTF8String:keyword];
         [poictr searchPoiByAround:str];
+    }
+    
+    void QueryWeather()
+    {
+        //NSLog(@"查询天气");
+        if(poictr == nil) {
+            poictr = [[POIController alloc] init];
+        }
+        [poictr onQueryWeather];
     }
     
 #ifdef __cplusplus

@@ -4,7 +4,7 @@
 #import <AMapSearchKit/AMapSearchKit.h>
 #import <AMapLocationKit/AMapLocationKit.h>
 #import <AMapFoundationKit/AMapFoundationKit.h>
-#import "MANaviRoute.h"
+//#import "MANaviRoute.h"
 
 @interface AMapController : UIViewController
 
@@ -23,9 +23,5 @@
 - (void)locateStop;
 - (void)showMapView;
 - (void)hideMapView;
-
-@end
-
-@interface RoutePlanWalkViewController : UIViewController
 
 @end

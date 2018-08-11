@@ -1,39 +1,16 @@
 #import "AMapController.h"
 #import "APIKey.h"
 
-static const NSString *RoutePlanningViewControllerStartTitle       = @"起点";
-static const NSString *RoutePlanningViewControllerDestinationTitle = @"终点";
-static const NSInteger RoutePlanningPaddingEdge                    = 20;
-
 @interface AMapController ()<MAMapViewDelegate, AMapLocationManagerDelegate>
 
 @property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
 
-
 /* 路径规划类型 */
-//@property (nonatomic, strong) MAMapView *mapView;
 @property (nonatomic, strong) AMapSearchAPI *search;
-
-@property (nonatomic, strong) AMapRoute *route;
-
-/* 当前路线方案索引值. */
-@property (nonatomic) NSInteger currentCourse;
-/* 路线方案个数. */
-@property (nonatomic) NSInteger totalCourse;
-
-@property (nonatomic, strong) UIBarButtonItem *previousItem;
-@property (nonatomic, strong) UIBarButtonItem *nextItem;
-
 /* 起始点经纬度. */
 @property (nonatomic) CLLocationCoordinate2D startCoordinate;
 /* 终点经纬度. */
 @property (nonatomic) CLLocationCoordinate2D destinationCoordinate;
-
-/* 用于显示当前路线方案. */
-@property (nonatomic) MANaviRoute * naviRoute;
-
-@property (nonatomic, strong) MAPointAnnotation *startAnnotation;
-@property (nonatomic, strong) MAPointAnnotation *destinationAnnotation;
 
 @end
 
@@ -116,7 +93,7 @@ static AMapController * SharedInstance;
         //逆地理信息
         if (regeocode)
         {
-            NSLog(@"reGeocode:%@", regeocode);
+            //NSLog(@"reGeocode:%@", regeocode);
         }
     }];
 }
@@ -133,28 +110,15 @@ static AMapController * SharedInstance;
 //接收位置更新
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location
 {
-    //NSLog(@"location:{lat:%f; lon:%f; accuracy:%f}", location.coordinate.latitude, location.coordinate.longitude, location.horizontalAccuracy);
     
-    //TODO: 合成Json输出
-    //location.altitude;
-    //location.speed;
-    //location.description;
-    
-    //NSString *json = [NSString stringWithFormat:@"{\"lat\":\"%f\",\"lon\":\"%f\",\"alt\":\"%f\",\"accuracy\":\"%f\",\"speed\":\"%f\"}",location.coordinate.latitude,location.coordinate.longitude,location.altitude,location.horizontalAccuracy,location.speed];
-    
-    //NSLog(@"%@", json);
 }
 
 //自 V2.2.0 版本起amapLocationManager:didUpdateLocation:reGeocode:方法可以在回调位置的同时回调逆地理编码信息。请注意，如果实现了amapLocationManager:didUpdateLocation:reGeocode: 回调，将不会再回调amapLocationManager:didUpdateLocation: 方法。
 - (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location reGeocode:(AMapLocationReGeocode *)reGeocode
 {
-    //NSLog(@"location:{lat:%f; lon:%f; accuracy:%f}", location.coordinate.latitude, location.coordinate.longitude, location.horizontalAccuracy);
-    
     self.location = location;
     
     NSString *json = [NSString stringWithFormat:@"{\"lat\":\"%f\",\"lon\":\"%f\",\"alt\":\"%f\",\"accuracy\":\"%f\",\"speed\":\"%f\"}",location.coordinate.latitude,location.coordinate.longitude,location.altitude,location.horizontalAccuracy,location.speed];
-    
-    NSLog(@"%@", json);
     
     UnitySendMessage("LocationManager", "IOSGPSUpdate", [json UTF8String]);
     
@@ -171,22 +135,15 @@ static AMapController * SharedInstance;
 }
 
 #pragma mark - do search
-- (void)searchRoutePlanningWalk:(double)lon0 from:(double)lat0 toLon:(double)lon1 toLat:(double)lat1
+- (void)searchRoutePlanningWalk:(double)mlat from:(double)mlon toLat:(double)tlat toLon:(double)tlon
 {
-    //self.startCoordinate        = CLLocationCoordinate2DMake(30.910267, 120.370888);
-    //self.destinationCoordinate  = CLLocationCoordinate2DMake(30.989872, 120.481956);
-    self.startCoordinate        = CLLocationCoordinate2DMake(lat0, lon0);
-    self.destinationCoordinate  = CLLocationCoordinate2DMake(lat1, lon1);
+    self.startCoordinate        = CLLocationCoordinate2DMake(mlat, mlon);
+    self.destinationCoordinate  = CLLocationCoordinate2DMake(tlat, tlon);
     
     self.search = [[AMapSearchAPI alloc] init];
     self.search.delegate = self;
     
     NSLog(@"步行路径规划");
-    
-    [self addDefaultAnnotations];
-    
-    self.startAnnotation.coordinate = self.startCoordinate;
-    self.destinationAnnotation.coordinate = self.destinationCoordinate;
     
     AMapWalkingRouteSearchRequest *navi = [[AMapWalkingRouteSearchRequest alloc] init];
     
@@ -200,29 +157,6 @@ static AMapController * SharedInstance;
     [self.search AMapWalkingRouteSearch:navi];
 }
 
-- (void)addDefaultAnnotations
-{
-    MAPointAnnotation *startAnnotation = [[MAPointAnnotation alloc] init];
-    startAnnotation.coordinate = self.startCoordinate;
-    startAnnotation.title      = (NSString*)RoutePlanningViewControllerStartTitle;
-    startAnnotation.subtitle   = [NSString stringWithFormat:@"{%f, %f}", self.startCoordinate.latitude, self.startCoordinate.longitude];
-    self.startAnnotation = startAnnotation;
-    
-    MAPointAnnotation *destinationAnnotation = [[MAPointAnnotation alloc] init];
-    destinationAnnotation.coordinate = self.destinationCoordinate;
-    destinationAnnotation.title      = (NSString*)RoutePlanningViewControllerDestinationTitle;
-    destinationAnnotation.subtitle   = [NSString stringWithFormat:@"{%f, %f}", self.destinationCoordinate.latitude, self.destinationCoordinate.longitude];
-    self.destinationAnnotation = destinationAnnotation;
-    
-    [self.mapView addAnnotation:startAnnotation];
-    [self.mapView addAnnotation:destinationAnnotation];
-}
-
-- (void)updateTotal
-{
-    self.totalCourse = self.route.paths.count;
-}
-
 /* 路径规划搜索回调. */
 - (void)onRouteSearchDone:(AMapRouteSearchBaseRequest *)request response:(AMapRouteSearchResponse *)response
 {
@@ -231,14 +165,10 @@ static AMapController * SharedInstance;
         return;
     }
     
-    self.route = response.route;
-    [self updateTotal];
-    self.currentCourse = 0;
-    
     if (response.count > 0)
     {
         AMapPath * path = response.route.paths[0];
-        MAPolyline * _polyline = [self polylinesForPath:path];
+        [self polylinesForPath:path];
     }
 }
 
@@ -312,8 +242,6 @@ static AMapController * SharedInstance;
     return coordinates;
 }
 
-UIView * unityView = nil; //内存指针
-
 // 显示地图
 - (void)showMapView
 {
@@ -323,9 +251,8 @@ UIView * unityView = nil; //内存指针
     //self.mapView = [[MAMapView alloc] initWithFrame:self.view.bounds]; //全屏
     self.mapView = [[MAMapView alloc] initWithFrame:CGRectMake(0,0,480,360)]; //指定尺寸
     self.mapView.delegate = self;
-    //[self.view addSubview:self.mapView];
     
-    unityView = UnityGetGLView();
+    UIView *unityView = UnityGetGLView();
     [unityView addSubview:self.mapView];
 }
 
@@ -348,43 +275,43 @@ extern "C" {
     
     void LocateInit()
     {
-        NSLog(@"==>> 初始化定位");
+        NSLog(@"初始化定位");
         [AMapController.sharedInstance locateInit];
     }
     
     void LocateOnce()
     {
-        NSLog(@"==>> 单次定位");
+        NSLog(@"单次定位");
         [AMapController.sharedInstance locateOnce];
     }
     
     void LocateUpdate()
     {
-        NSLog(@"==>> 持续定位");
+        NSLog(@"持续定位");
         [AMapController.sharedInstance locateUpdate];
     }
     
     void LocateStop()
     {
-        NSLog(@"==>> 结束定位");
+        NSLog(@"结束定位");
         [AMapController.sharedInstance locateStop];
     }
     
-    void WalkRoute(double lon0, double lat0, double lon1, double lat1)
+    void WalkRoute(double mlat, double mlon, double tlat, double tlon)
     {
-        NSLog(@"==>> 路径规划:(%f,%f)->(%f,%f)", lon0, lat0, lon1, lat1);
-        [AMapController.sharedInstance searchRoutePlanningWalk:lon0 from:lat0 toLon:lon1 toLat:lat1];
+        NSLog(@"路径规划:(%f,%f)->(%f,%f)", mlat, mlon, tlat, tlon);
+        [AMapController.sharedInstance searchRoutePlanningWalk:mlat from:mlon toLat:tlat toLon:tlon];
     }
     
     void ShowMapView()
     {
-        NSLog(@"==>> 显示地图");
+        NSLog(@"显示地图");
         [AMapController.sharedInstance showMapView];
     }
 
     void HideMapView()
     {
-        NSLog(@"==>> 关闭地图");
+        NSLog(@"关闭地图");
         [AMapController.sharedInstance hideMapView];
     }
 
